@@ -493,14 +493,17 @@ class Canvas(QWidget):
     def wheelEvent(self, ev):
         if PYQT5:
             mods = ev.modifiers()
-            delta = ev.pixelDelta()
+            delta = ev.angleDelta()
+            unit_delta = (delta / 120)
             if Qt.ControlModifier == int(mods):  # with Ctrl/Command key
                 # zoom
-                self.zoomRequest.emit(delta.y())
+                scaled_zoom = unit_delta.y() * 10
+                self.zoomRequest.emit(scaled_zoom)
             else:
                 # scroll
-                self.scrollRequest.emit(delta.x(), Qt.Horizontal)
-                self.scrollRequest.emit(delta.y(), Qt.Vertical)
+                scaled_scroll = unit_delta.y() * 10
+                self.scrollRequest.emit(scaled_scroll,
+                                        Qt.Horizontal if (Qt.ShiftModifier == int(mods)) else Qt.Vertical)
         else:
             if ev.orientation() == Qt.Vertical:
                 mods = ev.modifiers()
