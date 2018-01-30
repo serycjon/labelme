@@ -350,6 +350,7 @@ class Canvas(QWidget):
             shape = self.selectedShape
             self.shapes.remove(self.selectedShape)
             self.selectedShape = None
+            self.selectionChanged.emit(False)
             self.update()
             return shape
 
