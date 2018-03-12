@@ -83,6 +83,7 @@ setup(
     entry_points={'console_scripts': ['labelme=labelme.app:main']},
     scripts=[
         'scripts/labelme_draw_json',
+        'scripts/labelme_draw_mask_json',
         'scripts/labelme_json_to_dataset',
         'scripts/labelme_on_docker',
     ],
