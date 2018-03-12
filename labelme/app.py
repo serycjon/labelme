@@ -208,6 +208,11 @@ class MainWindow(QMainWindow, WindowMixin):
                  fmtShortcut("Ctrl+Wheel")))
         self.zoomWidget.setEnabled(False)
 
+        nextFrame = action('Next Frame', partial(self.seekFrame, 1),
+                           'Ctrl+Right', 'next-frame', 'Go to the next video frame')
+        prevFrame = action('Previous Frame', partial(self.seekFrame, -1),
+                           'Ctrl+Left', 'prev-frame', 'Go to the previous video frame')
+
         zoomIn = action('Zoom &In', partial(self.addZoom, 10),
                 'Ctrl++', 'zoom-in', 'Increase zoom level', enabled=False)
         zoomOut = action('&Zoom Out', partial(self.addZoom, -10),
@@ -260,8 +265,8 @@ class MainWindow(QMainWindow, WindowMixin):
                 shapeLineColor=shapeLineColor, shapeFillColor=shapeFillColor,
                 zoom=zoom, zoomIn=zoomIn, zoomOut=zoomOut, zoomOrg=zoomOrg,
                 fitWindow=fitWindow, fitWidth=fitWidth,
-                zoomActions=zoomActions,
-                fileMenuActions=(open,save,saveAs,close,quit),
+                zoomActions=zoomActions, prevFrame=prevFrame, nextFrame=nextFrame,
+                fileMenuActions=(open,save,saveAs,prevFrame,nextFrame,close,quit),
                 beginner=(), advanced=(),
                 editMenu=(edit, copy, delete, None, color1, color2),
                 beginnerContext=(create, edit, copy, delete),
@@ -279,7 +284,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 labelList=labelMenu)
 
         addActions(self.menus.file,
-                (open, self.menus.recentFiles, save, saveAs, close, None, quit))
+                (open, self.menus.recentFiles, save, saveAs, prevFrame, nextFrame, close, None, quit))
         addActions(self.menus.help, (help,))
         addActions(self.menus.view, (
             labels, advancedMode, None,
@@ -443,6 +448,30 @@ class MainWindow(QMainWindow, WindowMixin):
         return not self.beginner()
 
     ## Callbacks ##
+    def seekFrame(self, direction):
+        # list directory
+        directory = os.path.dirname(self.filename)
+        if directory == '':
+            directory = './'
+        filename = os.path.basename(self.filename)
+        filename = '{}.jpg'.format(os.path.splitext(filename)[0])
+
+        extensions = set(['.jpg'])
+        images = [f for f in next(os.walk(directory))[2] if os.path.splitext(f)[1] in extensions]
+        images = sorted(images)
+
+        current_index = images.index(filename)
+        new_index = (current_index + direction) % len(images)
+
+        new_image_name = os.path.splitext(images[new_index])[0]
+
+        new_json = os.path.join(directory, '{}.json'.format(new_image_name))
+        new_image = os.path.join(directory, '{}.jpg'.format(new_image_name))
+        if os.path.exists(new_json):
+            self.loadFile(new_json)
+        else:
+            self.loadFile(new_image)
+
     def tutorial(self):
         subprocess.Popen([self.screencastViewer, self.screencast])
 
