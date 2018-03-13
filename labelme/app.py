@@ -24,6 +24,7 @@ import os.path
 import re
 import sys
 import subprocess
+import json
 
 from functools import partial
 from collections import defaultdict
@@ -212,6 +213,8 @@ class MainWindow(QMainWindow, WindowMixin):
                            'Ctrl+Right', 'next-frame', 'Go to the next video frame')
         prevFrame = action('Previous Frame', partial(self.seekFrame, -1),
                            'Ctrl+Left', 'prev-frame', 'Go to the previous video frame')
+        loadInit = action('Load Init', self.loadInit,
+                          'Ctrl+Up', 'load-init', 'Load initial labeling')
 
         zoomIn = action('Zoom &In', partial(self.addZoom, 10),
                 'Ctrl++', 'zoom-in', 'Increase zoom level', enabled=False)
@@ -266,7 +269,8 @@ class MainWindow(QMainWindow, WindowMixin):
                 zoom=zoom, zoomIn=zoomIn, zoomOut=zoomOut, zoomOrg=zoomOrg,
                 fitWindow=fitWindow, fitWidth=fitWidth,
                 zoomActions=zoomActions, prevFrame=prevFrame, nextFrame=nextFrame,
-                fileMenuActions=(open,save,saveAs,prevFrame,nextFrame,close,quit),
+                loadInit=loadInit,
+                fileMenuActions=(open,save,saveAs,prevFrame,nextFrame,loadInit,close,quit),
                 beginner=(), advanced=(),
                 editMenu=(edit, copy, delete, None, color1, color2),
                 beginnerContext=(create, edit, copy, delete),
@@ -284,7 +288,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 labelList=labelMenu)
 
         addActions(self.menus.file,
-                (open, self.menus.recentFiles, save, saveAs, prevFrame, nextFrame, close, None, quit))
+                (open, self.menus.recentFiles, save, saveAs, prevFrame, nextFrame, loadInit, close, None, quit))
         addActions(self.menus.help, (help,))
         addActions(self.menus.view, (
             labels, advancedMode, None,
@@ -471,6 +475,33 @@ class MainWindow(QMainWindow, WindowMixin):
             self.loadFile(new_json)
         else:
             self.loadFile(new_image)
+
+    def loadInit(self):
+        '''Load shapes from initialization file
+
+        If init-[current-name].json exists in the current directory,
+        it is loaded.  The init file stores a list of shapes, each
+        shape being a [x, y] coordinates list.
+        '''
+        directory = os.path.dirname(self.filename)
+        if directory == '':
+            directory = './'
+        filename = os.path.basename(self.filename)
+
+        init_path = os.path.join(directory, 'init-{}.json'.format(os.path.splitext(filename)[0]))
+        if os.path.exists(init_path):
+            with open(init_path, 'r') as fin:
+                init_shapes = json.loads(fin.read())
+
+            shapes = []
+            for shape_i, shape in enumerate(init_shapes):
+                if len(shape) < 3:
+                    continue
+                shapes.append(('imported_{}'.format(shape_i), shape, None, None))
+
+            self.loadLabels(shapes)
+        else:
+            print('{} not found!'.format(init_path))
 
     def tutorial(self):
         subprocess.Popen([self.screencastViewer, self.screencast])
