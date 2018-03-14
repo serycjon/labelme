@@ -495,7 +495,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
             shapes = []
             for shape_i, shape in enumerate(init_shapes):
-                if len(shape) < 3:
+                if len(shape) < 4:
                     continue
                 shapes.append(('imported_{}'.format(shape_i), shape, None, None))
 
