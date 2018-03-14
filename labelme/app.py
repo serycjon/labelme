@@ -499,7 +499,9 @@ class MainWindow(QMainWindow, WindowMixin):
                     continue
                 shapes.append(('imported_{}'.format(shape_i), shape, None, None))
 
-            self.loadLabels(shapes)
+            if len(shapes) > 0:
+                self.loadLabels(shapes)
+                self.setDirty()
         else:
             print('{} not found!'.format(init_path))
 
